@@ -139,6 +139,31 @@ class Borehole(object):
                          orientation=self.orientation))
         return boreSegments
 
+    def image(self):
+        x = self.x + self.H*np.sin(self.tilt)*np.cos(self.orientation)
+        y = self.y + self.H*np.sin(self.tilt)*np.sin(self.orientation)
+        D = -self.D - self.H*np.cos(self.tilt)
+        return Borehole(self.H, D, self.r_b, x, y, self.tilt, pi+self.orientation)
+
+    def is_equal(self, target, tol=1.0e-6):
+        return np.sqrt((self.x - target.x)**2 + (self.y - target.y)**2) < self.r_b and self.is_parallel(target, tol=tol)
+
+    def is_parallel(self, target, tol=1.0e-6):
+        beta1, theta1 = self.tilt, self.orientation
+        beta2, theta2 = target.tilt, target.orientation
+        if beta1 < 0.:
+            beta1 = np.abs(beta1)
+            theta1 = theta1 + pi
+        theta1 = np.mod(theta1, 2*pi)
+        if beta2 < 0.:
+            beta2 = np.abs(beta2)
+            theta2 = theta2 + pi
+        theta2 = np.mod(theta2, 2*pi)
+        return np.abs(beta1 - beta2) < tol and np.abs(theta1 - theta2) < tol
+
+    def is_vertical(self, tol=1.0e-6):
+        return np.abs(self.tilt) < tol
+
 
 def find_duplicates(boreField, disp=False):
     """
