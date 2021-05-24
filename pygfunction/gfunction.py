@@ -701,6 +701,9 @@ class gFunction(object):
             "objects."
         assert not find_duplicates(self.boreholes), \
             "There are duplicate boreholes in the borefield."
+        assert np.all([b.is_vertical() for b in self.boreholes]) or self.method=='detailed', \
+            "The current version of pygfunction only supports vertical " \
+            "boreholes."
         assert (self.network is None and not self.boundary_condition=='MIFT') or isinstance(self.network, Network), \
             "The network is not a valid 'Network' object."
         assert self.network is None or (self.network.m_flow is not None and self.network.cp is not None), \
@@ -1475,9 +1478,6 @@ class _BaseSolver(object):
         assert np.all([isinstance(b, Borehole) for b in self.boreholes]), \
             "The list of boreholes contains elements that are not Borehole " \
             "objects."
-        assert np.all(np.abs([b.tilt for b in self.boreholes]) <= 1e-6), \
-            "The current version of pygfunction only supports vertical " \
-            "boreholes."
         assert self.network is None or isinstance(self.network, Network), \
             "The network is not a valid 'Network' object."
         assert self.network is None or (self.network.m_flow is not None and self.network.cp is not None), \
