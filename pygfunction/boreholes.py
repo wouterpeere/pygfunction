@@ -159,7 +159,7 @@ class Borehole(object):
             beta2 = np.abs(beta2)
             theta2 = theta2 + pi
         theta2 = np.mod(theta2, 2*pi)
-        return np.abs(beta1 - beta2) < tol and np.abs(theta1 - theta2) < tol
+        return np.abs(beta1 - beta2) < tol and (np.abs(theta1 - theta2) < tol or np.abs(np.abs(theta1 - theta2) - 2*pi) < tol)
 
     def is_vertical(self, tol=1.0e-6):
         return np.abs(self.tilt) < tol
