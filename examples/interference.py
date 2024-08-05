@@ -44,6 +44,12 @@ def main():
     N_2 = np.array(
         [18, 18, 18],
         dtype=np.uint)
+    # N_1 = np.full(
+    #     20, 1,
+    #     dtype=np.uint)
+    # N_2 = np.full(
+    #     20, 18,
+    #     dtype=np.uint)
 
     # Borefields
     fields = [
@@ -161,6 +167,7 @@ def main():
             old_eq_borehole = gfunc.solver.clusters[idx][0]
             new_eq_borehole = borehole[0] - offset
             # divide by total number of boreholes in cluster[old_eq_borehole], in order to average the Q_b out
+            cluster = [b.nBoreholes for b in gfunc.solver.boreholes]
             Q_b_new[new_eq_borehole, :] += Q_b[old_eq_borehole] / cluster[old_eq_borehole]
 
         return np.array(Q_b_new).flatten()
@@ -202,8 +209,16 @@ def main():
                 g_ij_UBWT_full[i, j, k] = coeff @ delta_T / np.sum(nSegments_i)
 
     g_tot_UBWT_full = np.zeros(Nt)
+    g_tot_UBWT_full2 = np.zeros(Nt)
     for k in range(Nt):
         g_tot_UBWT_full[k] = (nBoreholes @ np.sum(g_ij_UBWT_full[:, :, k], axis=1)) / np.sum(nBoreholes)
+        A = np.block(
+            [[g_ij_UBWT_full[:, :, k], -np.ones((nFields, 1))],
+              [np.atleast_2d(nBoreholes), np.zeros((1, 1))]])
+        B = np.zeros(nFields + 1)
+        B[-1] = np.sum(nBoreholes)
+        X = np.linalg.solve(A, B)
+        g_tot_UBWT_full2[k] = X[-1]
 
     ax = gfunc_UBWT.visualize_g_function().axes[0]
     for i, nBoreholes_i in enumerate(nBoreholes_eq):
@@ -222,6 +237,7 @@ def main():
     ax.plot(lntts, g_tot, marker='.', label='UHTR + UHTR for cross g-functions')
     ax.plot(lntts, g_tot_UBWT, marker='.', label='UBWT + UHRT for cross g-functions')
     ax.plot(lntts, g_tot_UBWT_full, marker='.', label='UBWT + UBWT for cross g-functions')
+    ax.plot(lntts, g_tot_UBWT_full2, marker='.', label='UBWT + UBWT for cross g-functions (2)')
     ax.plot(lntts, gfunc_UBWT.gFunc, label='UBWT total field')
     ax.legend()
     plt.title('Comparison of different methods for cross g-functions')
